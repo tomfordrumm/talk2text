@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="ru" class="h-full">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Talk2Text — Транскрибатор</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+            integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = { darkMode: "class" };
+        </script>
+    </head>
+    <body
+        class="min-h-dvh bg-zinc-50 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100"
+    >
+        <div class="mx-auto max-w-xl p-6 sm:p-8">
+            <div
+                class="rounded-2xl border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg overflow-hidden"
+            >
+                <!-- Header -->
+                <div class="flex items-center justify-between p-4 sm:p-6">
+                    <h1 class="text-xl font-semibold tracking-tight">
+                        Talk2Text
+                    </h1>
+                    <button
+                        id="btn-settings"
+                        class="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors duration-200"
+                        aria-label="Настройки"
+                    >
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                </div>
+
+                <!-- Tabs + Panels -->
+                <div class="px-4 sm:px-6 pb-6 space-y-6">
+                    <div
+                        class="inline-flex rounded-xl bg-zinc-100 dark:bg-zinc-800 p-1"
+                        role="tablist"
+                    >
+                        <button
+                            data-tab="record"
+                            id="tab-record"
+                            class="px-3 py-2 text-sm rounded-lg transition-colors data-[selected=true]:bg-white data-[selected=true]:dark:bg-zinc-900 data-[selected=true]:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                            role="tab"
+                            aria-selected="true"
+                            data-selected="true"
+                        >
+                            🎙 Запись
+                        </button>
+                        <button
+                            data-tab="file"
+                            id="tab-file"
+                            class="px-3 py-2 text-sm rounded-lg text-zinc-600 dark:text-zinc-300 transition-colors data-[selected=true]:bg-white data-[selected=true]:dark:bg-zinc-900 data-[selected=true]:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                            role="tab"
+                            aria-selected="false"
+                            data-selected="false"
+                        >
+                            📂 Файл
+                        </button>
+                    </div>
+
+                    <!-- Record panel -->
+                    <div id="panel-record" class="space-y-4" role="tabpanel">
+                        <div class="flex flex-col items-center gap-3 py-2">
+                            <p
+                                id="record-timer"
+                                class="hidden text-2xl font-semibold font-mono tabular-nums text-zinc-700 dark:text-zinc-300"
+                            >
+                                00:00
+                            </p>
+
+                            <div class="relative inline-flex items-center justify-center">
+                                <span
+                                    id="record-pulse"
+                                    class="hidden absolute inline-flex h-28 w-28 rounded-full bg-red-500/30 opacity-75 animate-ping"
+                                ></span>
+                                <button
+                                    id="btn-record"
+                                    class="relative z-10 h-24 w-24 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center text-3xl shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                    aria-label="Начать запись"
+                                >
+                                    <i class="fa-solid fa-microphone"></i>
+                                </button>
+                            </div>
+
+                            <p
+                                id="record-hint"
+                                class="text-sm text-zinc-600 dark:text-zinc-300"
+                            >
+                                Нажмите, чтобы начать запись
+                            </p>
+                            <p
+                                id="record-warning"
+                                class="hidden text-xs text-amber-600 dark:text-amber-400"
+                            >
+                                Текущая запись будет потеряна
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 gap-3">
+                            <audio
+                                id="audio-player"
+                                controls
+                                class="hidden w-full rounded-xl border border-zinc-200 dark:border-zinc-800"
+                            ></audio>
+                            <p
+                                id="recording-error"
+                                class="hidden text-sm text-red-600"
+                            ></p>
+                        </div>
+                    </div>
+
+                    <!-- File panel -->
+                    <div
+                        id="panel-file"
+                        class="hidden space-y-3"
+                        role="tabpanel"
+                        aria-hidden="true"
+                    >
+                        <label
+                            id="dropzone"
+                            class="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 p-8 text-center cursor-pointer hover:border-indigo-500 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        >
+                            <input
+                                id="file-input"
+                                type="file"
+                                class="sr-only"
+                                accept=".wav,.mp3,.m4a,.ogg"
+                            />
+                            <div class="text-base">Перетащите файл сюда</div>
+                            <div class="text-sm text-zinc-600 dark:text-zinc-300">
+                                или нажмите, чтобы выбрать (до 25 МБ)
+                            </div>
+                        </label>
+                        <div
+                            class="text-sm text-zinc-600 dark:text-zinc-300"
+                            id="file-name"
+                        ></div>
+                        <p
+                            id="file-error"
+                            class="hidden text-sm text-red-600"
+                        ></p>
+                        <audio
+                            id="file-player"
+                            controls
+                            class="hidden w-full rounded-xl border border-zinc-200 dark:border-zinc-800"
+                        ></audio>
+                    </div>
+
+                    <!-- Run button -->
+                    <button
+                        id="btn-run"
+                        class="w-full rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white py-3 font-medium transition-colors duration-200 disabled:opacity-60 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        disabled
+                    >
+                        Преобразовать в текст
+                    </button>
+
+                    <!-- Result -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium">Текст</span>
+                            <div class="flex gap-1">
+                                <button
+                                    id="btn-copy"
+                                    class="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                    aria-label="Копировать"
+                                >
+                                    <i class="fa-solid fa-copy"></i>
+                                </button>
+                                <button
+                                    id="btn-download"
+                                    class="p-2 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                    aria-label="Скачать"
+                                >
+                                    <i class="fa-solid fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <textarea
+                            id="result"
+                            class="min-h-40 w-full resize-y rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 p-3 font-mono text-sm"
+                            placeholder="Здесь появится результат..."
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal (Settings / API key) -->
+        <div
+            id="modal"
+            class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+        >
+            <div class="absolute inset-0 bg-black/40" data-overlay></div>
+            <div
+                role="dialog"
+                aria-modal="true"
+                class="relative w-full max-w-md rounded-2xl p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+            >
+                <h2 id="modal-title" class="text-lg font-semibold mb-4">
+                    OpenAI API Key
+                </h2>
+
+                <!-- API key field (always present) -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label for="apiKeyInput" class="text-sm">OpenAI API Key</label>
+                        <div class="relative group inline-flex items-center" aria-label="Что такое API ключ?">
+                            <button type="button" class="p-1 rounded text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">
+                                <i class="fa-solid fa-circle-question" aria-hidden="true"></i>
+                            </button>
+                            <div
+                                role="tooltip"
+                                class="absolute right-0 top-full z-20 w-64 max-w-xs rounded-md border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-2 text-xs text-zinc-700 dark:text-zinc-200 shadow-lg hidden group-hover:block group-focus-within:block"
+                            >
+                                Приватный ключ для доступа к OpenAI API. Получить:
+                                <a
+                                    class="text-indigo-600 dark:text-indigo-400 underline"
+                                    href="https://platform.openai.com/api-keys"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >platform.openai.com/api-keys</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="relative">
+                        <input
+                            id="apiKeyInput"
+                            type="password"
+                            class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-2 pr-10"
+                            placeholder="sk-..."
+                        />
+                        <button
+                            id="toggleApiKey"
+                            type="button"
+                            class="absolute inset-y-0 right-2 my-auto h-8 w-8 inline-flex items-center justify-center rounded text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                            aria-label="Показать ключ"
+                        >
+                            <i id="toggleApiKeyIcon" class="fa-solid fa-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <label class="mt-1 flex items-center gap-2 text-sm"
+                        ><input
+                            id="remember"
+                            type="checkbox"
+                            class="rounded"
+                            checked
+                        />
+                        Запомнить на этом устройстве</label
+                    >
+                </div>
+
+                <!-- Settings fields (visible only in Settings mode) -->
+                <div id="settingsFields" class="mt-5 space-y-4 hidden">
+                    <div class="space-y-1">
+                        <label for="modelSelect" class="text-sm">Модель</label>
+                        <select
+                            id="modelSelect"
+                            class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-2"
+                        >
+                            <option value="whisper-1">whisper-1</option>
+                            <option value="gpt-4o-transcribe">
+                                gpt-4o-transcribe
+                            </option>
+                            <option value="gpt-4o-mini-transcribe">
+                                gpt-4o-mini-transcribe
+                            </option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label for="responseFormat" class="text-sm"
+                            >Формат ответа</label
+                        >
+                        <select
+                            id="responseFormat"
+                            class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-2"
+                        >
+                            <option value="text">text</option>
+                            <option value="json">json</option>
+                            <option value="verbose_json">verbose_json</option>
+                            <option value="srt">srt</option>
+                            <option value="vtt">vtt</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label for="languageSelect" class="text-sm"
+                            >Язык (опционально)</label
+                        >
+                        <select
+                            id="languageSelect"
+                            class="w-full rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-2"
+                        >
+                            <option value="">Автоопределение</option>
+                            <option value="af">Afrikaans</option>
+                            <option value="ar">Arabic</option>
+                            <option value="hy">Armenian</option>
+                            <option value="az">Azerbaijani</option>
+                            <option value="be">Belarusian</option>
+                            <option value="bs">Bosnian</option>
+                            <option value="bg">Bulgarian</option>
+                            <option value="ca">Catalan</option>
+                            <option value="zh">Chinese</option>
+                            <option value="hr">Croatian</option>
+                            <option value="cs">Czech</option>
+                            <option value="da">Danish</option>
+                            <option value="nl">Dutch</option>
+                            <option value="en">English</option>
+                            <option value="et">Estonian</option>
+                            <option value="fi">Finnish</option>
+                            <option value="fr">French</option>
+                            <option value="gl">Galician</option>
+                            <option value="de">German</option>
+                            <option value="el">Greek</option>
+                            <option value="he">Hebrew</option>
+                            <option value="hi">Hindi</option>
+                            <option value="hu">Hungarian</option>
+                            <option value="is">Icelandic</option>
+                            <option value="id">Indonesian</option>
+                            <option value="it">Italian</option>
+                            <option value="ja">Japanese</option>
+                            <option value="kn">Kannada</option>
+                            <option value="kk">Kazakh</option>
+                            <option value="ko">Korean</option>
+                            <option value="lv">Latvian</option>
+                            <option value="lt">Lithuanian</option>
+                            <option value="mk">Macedonian</option>
+                            <option value="ms">Malay</option>
+                            <option value="mr">Marathi</option>
+                            <option value="mi">Maori</option>
+                            <option value="ne">Nepali</option>
+                            <option value="no">Norwegian</option>
+                            <option value="fa">Persian</option>
+                            <option value="pl">Polish</option>
+                            <option value="pt">Portuguese</option>
+                            <option value="ro">Romanian</option>
+                            <option value="ru">Russian</option>
+                            <option value="sr">Serbian</option>
+                            <option value="sk">Slovak</option>
+                            <option value="sl">Slovenian</option>
+                            <option value="es">Spanish</option>
+                            <option value="sw">Swahili</option>
+                            <option value="sv">Swedish</option>
+                            <option value="tl">Tagalog</option>
+                            <option value="tr">Turkish</option>
+                            <option value="uk">Ukrainian</option>
+                            <option value="ur">Urdu</option>
+                            <option value="vi">Vietnamese</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label for="promptInput" class="text-sm"
+                            >Prompt (опционально)</label
+                        >
+                        <textarea
+                            id="promptInput"
+                            class="w-full min-h-24 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-2 text-sm"
+                            placeholder="Введите специфические термины или имена для улучшения распознавания..."
+                        ></textarea>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-2">
+                    <button
+                        id="modalCancel"
+                        class="px-4 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    >
+                        Отмена
+                    </button>
+                    <button
+                        id="modalSave"
+                        class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    >
+                        Сохранить и продолжить
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="script.js" defer></script>
+    </body>
+</html>
