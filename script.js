@@ -814,7 +814,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const password_confirmation = regPassword2.value;
     setRegisterLoading(true);
     try {
-      const resp = await fetch("https://api2text.local/api/auth/register", {
+      const resp = await fetch(`${SERVICE_API_BASE}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -973,7 +973,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = loginPassword.value;
     setLoginLoading(true);
     try {
-      const resp = await fetch("https://api2text.local/api/auth/login", {
+      const resp = await fetch(`${SERVICE_API_BASE}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1079,7 +1079,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       form.append("duration", String(Math.round(durationSec || 0)));
 
-      const resp = await fetch("https://api2text.local/api/transcribe", {
+      const resp = await fetch(`${SERVICE_API_BASE}/transcribe`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: form,
